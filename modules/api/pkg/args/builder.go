@@ -78,9 +78,21 @@ func (self *holderBuilder) SetKeyFile(keyFile string) *holderBuilder {
 	return self
 }
 
-// SetApiServerHost 'api-server-host' argument of Dashboard binary.
-func (self *holderBuilder) SetApiServerHost(apiServerHost string) *holderBuilder {
-	self.holder.apiServerHost = apiServerHost
+// SetApiserverHost 'apiserver-host' argument of Dashboard binary.
+func (self *holderBuilder) SetApiserverHost(apiserverHost string) *holderBuilder {
+	self.holder.apiserverHost = apiserverHost
+	return self
+}
+
+// SetNamespaceHeader 'namespace-header' argument of Dashboard binary.
+func (self *holderBuilder) SetNamespaceHeader(namespaceHeader string) *holderBuilder {
+	self.holder.namespaceHeader = namespaceHeader
+	return self
+}
+
+// SetNamespacePattern 'namespace-pattern' argument of Dashboard binary.
+func (self *holderBuilder) SetNamespacePattern(namespacePattern string) *holderBuilder {
+	self.holder.namespacePattern = namespacePattern
 	return self
 }
 
@@ -102,9 +114,9 @@ func (self *holderBuilder) SetSidecarHost(sidecarHost string) *holderBuilder {
 	return self
 }
 
-// SetKubeConfigFile 'kubeconfig' argument of Dashboard binary.
-func (self *holderBuilder) SetKubeConfigFile(kubeConfigFile string) *holderBuilder {
-	self.holder.kubeConfigFile = kubeConfigFile
+// SetKubeconfigFile 'kubeconfig' argument of Dashboard binary.
+func (self *holderBuilder) SetKubeconfigFile(kubeconfigFile string) *holderBuilder {
+	self.holder.kubeconfigFile = kubeconfigFile
 	return self
 }
 
