@@ -15,13 +15,14 @@
 import {HttpClient, HttpErrorResponse, HttpHeaders} from '@angular/common/http';
 import {EventEmitter, Injectable} from '@angular/core';
 import {MatDialog, MatDialogConfig} from '@angular/material/dialog';
-import {ObjectMeta, TypeMeta} from '@api/root.api';
+import {ObjectMeta, TypeMeta, SetImageData} from '@api/root.api';
 import {filter, switchMap} from 'rxjs/operators';
 
 import {AlertDialogComponent, AlertDialogConfig} from '../../dialogs/alert/dialog';
 import {DeleteResourceDialogComponent} from '../../dialogs/deleteresource/dialog';
 import {EditResourceDialogComponent} from '../../dialogs/editresource/dialog';
 import {RestartResourceDialogComponent} from '../../dialogs/restartresource/dialog';
+import {SetImageDialogComponent} from '../../dialogs/setimage/dialog';
 import {ScaleResourceDialogComponent} from '../../dialogs/scaleresource/dialog';
 import {TriggerResourceDialogComponent} from '../../dialogs/triggerresource/dialog';
 import {RawResource} from '../../resources/rawresource';
@@ -84,6 +85,26 @@ export class VerberService {
         })
       )
       .subscribe(_ => this.onTrigger.emit(true), this.handleErrorResponse_.bind(this));
+  }
+
+  showSetImageDialogComponent(displayName: string, typeMeta: TypeMeta, objectMeta: ObjectMeta): void {
+    const dialogConfig = this.getDialogConfig_(displayName, typeMeta, objectMeta);
+    this.dialog_
+      .open(SetImageDialogComponent, dialogConfig)
+      .afterClosed()
+      .pipe(filter(result => result))
+      .pipe(
+        switchMap(result => {
+          const deploymentData = result as SetImageData;
+
+          const url = `api/v1/setimage/${typeMeta.kind}${objectMeta.namespace ? `/${objectMeta.namespace}` : ''}/${
+            objectMeta.name
+          }`;
+
+          return this.http_.put(url, deploymentData);
+        })
+      )
+      .subscribe(_ => this.onScale.emit(true), this.handleErrorResponse_.bind(this));
   }
 
   showScaleDialog(displayName: string, typeMeta: TypeMeta, objectMeta: ObjectMeta): void {

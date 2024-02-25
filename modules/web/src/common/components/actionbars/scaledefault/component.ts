@@ -38,6 +38,10 @@ export class ScaleDefaultActionbarComponent implements OnInit {
     this.actionbar_.onDetailsLeave.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => (this.isVisible = false));
   }
 
+  canSetImage(): boolean {
+    return this.resourceMeta.typeMeta.canSetImage;
+  }
+
   scalable(): boolean {
     return this.resourceMeta.typeMeta.scalable;
   }
