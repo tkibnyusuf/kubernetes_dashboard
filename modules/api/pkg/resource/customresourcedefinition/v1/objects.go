@@ -18,10 +18,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/rest"
 
 	"k8s.io/dashboard/api/pkg/api"
@@ -128,4 +130,19 @@ func toCRDObject(object *types.CustomResourceObject, crd *apiextensionsv1.Custom
 	object.TypeMeta.Kind = api.ResourceKind(crd.Name)
 	crdSubresources := crd.Spec.Versions[0].Subresources
 	object.TypeMeta.Scalable = crdSubresources != nil && crdSubresources.Scale != nil
+	object.AdditionalPrinterColumns = make(map[string]interface{})
+	for _, col := range crd.Spec.Versions[0].AdditionalPrinterColumns {
+		val, _, _ := unstructured.NestedString(object.RawObject.Object, splitJsonPath(col.JSONPath)...)
+		object.AdditionalPrinterColumns[col.Name] = val
+	}
+}
+
+func splitJsonPath(path string) []string {
+	var paths []string
+	for _, p := range strings.Split(path, ".") {
+		if p != "" {
+			paths = append(paths, p)
+		}
+	}
+	return paths
 }

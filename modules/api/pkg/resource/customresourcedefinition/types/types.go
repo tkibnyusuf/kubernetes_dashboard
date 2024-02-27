@@ -17,9 +17,9 @@ package types
 import (
 	"encoding/json"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"k8s.io/dashboard/api/pkg/api"
 	"k8s.io/dashboard/api/pkg/resource/common"
@@ -59,16 +59,26 @@ type CustomResourceDefinitionDetail struct {
 	Errors []error `json:"errors"`
 }
 
+type AdditionalPrinterColumn struct {
+	Name     string `json:"name"`
+	Type     string `json:"type,omitempty"`
+	Priority int32  `json:"priority,omitempty"`
+	JSONPath string `json:"jsonPath"`
+}
+
 type CustomResourceDefinitionVersion struct {
-	Name    string `json:"name"`
-	Served  bool   `json:"served"`
-	Storage bool   `json:"storage"`
+	Name                     string                    `json:"name"`
+	Served                   bool                      `json:"served"`
+	Storage                  bool                      `json:"storage"`
+	AdditionalPrinterColumns []AdditionalPrinterColumn `json:"additionalPrinterColumns"`
 }
 
 // CustomResourceObject represents a custom resource object.
 type CustomResourceObject struct {
-	TypeMeta   api.TypeMeta   `json:"typeMeta"`
-	ObjectMeta api.ObjectMeta `json:"objectMeta"`
+	AdditionalPrinterColumns map[string]interface{}    `json:"additionalPrinterColumns,omitempty"`
+	RawObject                unstructured.Unstructured `json:"-"` // the raw object as map[string]interface{} to grep the value for AdditionalPrinterColumnWithValue which is present on the CRD Details
+	TypeMeta                 api.TypeMeta              `json:"typeMeta"`
+	ObjectMeta               api.ObjectMeta            `json:"objectMeta"`
 }
 
 func (r *CustomResourceObject) UnmarshalJSON(data []byte) error {
@@ -76,14 +86,21 @@ func (r *CustomResourceObject) UnmarshalJSON(data []byte) error {
 		metav1.TypeMeta `json:",inline"`
 		ObjectMeta      metav1.ObjectMeta `json:"metadata,omitempty"`
 	}{}
+	tempUnstruct := &unstructured.Unstructured{}
 
 	err := json.Unmarshal(data, &tempStruct)
 	if err != nil {
 		return err
 	}
 
+	err = tempUnstruct.UnmarshalJSON(data)
+	if err != nil {
+		return err
+	}
+
 	r.TypeMeta = api.NewTypeMeta(api.ResourceKind(tempStruct.TypeMeta.Kind))
 	r.ObjectMeta = api.NewObjectMeta(tempStruct.ObjectMeta)
+	r.RawObject = *tempUnstruct
 	return nil
 }
 
